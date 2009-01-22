@@ -142,7 +142,7 @@ var BaseSparkline = function() {
       data.push({'y':heights[i], 'x':widths[i]});
     return data;
   };
-
+	
   this.draw = function() {
     var sl = this;
     with(Processing(sl.canvas)) {
@@ -210,13 +210,32 @@ Sparkline.prototype = new BaseSparkline();
 
 var BarSparkline = function(id,data,mixins) {
   if (!mixins) mixins = {};
-
+	
+	this.max_highlight_color = '#DFDFDF';
+	this.highlight_max_value = true;
+	
   this.marking_padding = 5;
   this.padding_between_bars = 5;
   this.extend_markings = true;
   if (!mixins.hasOwnProperty('scale_from')) mixins.scale_from = 0;
 
   this.init(id,data,mixins);
+
+	this.index_of_max_value = function() {
+		var l = this.data.length;
+		var max_value = this.data[0];
+		var index_of_max_value = 0;
+		
+		for (var i = 1; i < l; i++) {
+			if (this.data[i] > max_value) {
+				max_value = this.data[i];
+				index_of_max_value = i;
+			}
+		}
+		
+		return index_of_max_value;
+	};
+
   this.segment_width = function() {
     var l = this.data.length;
     var w = this.width();
@@ -308,12 +327,19 @@ var BarSparkline = function(id,data,mixins) {
 	}
 
 	// Draw bars.
-	stroke(sl.line_color);
-	fill(sl.line_color);
 	var width = sl.segment_width();
 	var height = sl.height();
+	
+	var highlight_color_for_index = {};
+	if (sl.highlight_max_value)
+		highlight_color_for_index[sl.index_of_max_value()] = sl.max_highlight_color;
+	
 	for (var i=0;i<l;i++) {
 	  var d = scaled[i];
+	
+		stroke(highlight_color_for_index[i] || sl.line_color);
+		fill(highlight_color_for_index[i] || sl.line_color);
+	
 	  rect(d.x,d.y,width,height-d.y);
 	};
 	this.exit();
